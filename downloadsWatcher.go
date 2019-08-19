@@ -32,6 +32,17 @@ func FileExtension(filename string) string {
 	return ext
 }
 
+// CreteFolder creates a folder if it does not already exist
+func CreteFolder(path string, perms uint32) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.Mkdir(path, os.FileMode(perms)); err != nil {
+			log.Println(err)
+		} else {
+			fmt.Println("Created", path)
+		}
+	}
+}
+
 // MoveFile moves src file into a destination folder
 func MoveFile(src string) error {
 	// open file to copy
@@ -92,15 +103,9 @@ var (
 func main() {
 
 	// create folders
-	if err := os.Mkdir("/home/mastodilu/Downloads/Eseguibili", os.FileMode(0766)); err != nil {
-		log.Println(err)
-	}
-	if err := os.Mkdir("/home/mastodilu/Downloads/Archivi", os.FileMode(0766)); err != nil {
-		log.Println(err)
-	}
-	if err := os.Mkdir("/home/mastodilu/Downloads/Altro", os.FileMode(0766)); err != nil {
-		log.Println(err)
-	}
+	CreteFolder("/home/mastodilu/Downloads/Eseguibili", 0766)
+	CreteFolder("/home/mastodilu/Downloads/Archivi", 0766)
+	CreteFolder("/home/mastodilu/Downloads/Altro", 0766)
 
 	// creates a new file watcher
 	watcher, err := fsnotify.NewWatcher()
