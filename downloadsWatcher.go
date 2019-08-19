@@ -12,6 +12,26 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// FileName returns the filename of a given path or error
+func FileName(src string) (string, error) {
+	lastIndex := strings.LastIndexAny(src, "/")
+	if lastIndex == -1 {
+		return "", fmt.Errorf("last index of character '/' is -1 in source file")
+	}
+	filename := src[lastIndex:len(src)]
+	return filename, nil
+}
+
+// FileExtension returns the file extension of a given filename
+func FileExtension(filename string) string {
+	lastIndex := strings.LastIndexAny(filename, ".")
+	if lastIndex == -1 {
+		return ""
+	}
+	ext := filename[lastIndex:len(filename)]
+	return ext
+}
+
 // MoveFile moves src file into a destination folder
 func MoveFile(src string) error {
 	// open file to copy
@@ -21,11 +41,16 @@ func MoveFile(src string) error {
 	}
 	defer srcFile.Close()
 
-	lastIndex := strings.LastIndexAny(src, "/")
-	if lastIndex == -1 {
-		return fmt.Errorf("last index of character '/' is -1 in source file")
+	// obtain file name
+	var filename string
+	if filename, err = FileName(src); err != nil {
+		return err
 	}
-	filename := src[lastIndex:len(src)]
+
+	// obtain file extension
+	fileextension := FileExtension(filename)
+
+	fmt.Println("filename", filename, "extension", fileextension)
 
 	// create new destination file into destination folder
 	dstFile, err := os.OpenFile(filepath.Join(baseDst, filename), os.O_CREATE|os.O_WRONLY|os.O_EXCL, os.FileMode(0666)) // TODO change baseDst based on file format
@@ -54,7 +79,29 @@ const (
 	baseDst string = "/home/mastodilu/PROVA"
 )
 
+var (
+	imageExtensions      = []string{"jpeg", "jpg", "gif", "png", "bmp", "raw", "tiff", "psd", "cr2"}
+	videoExtensions      = []string{"avi", "flv", "wmv", "mov", "mp4"}
+	audioExtensions      = []string{"pcm", "wav", "aiff", "mp3", "aac", "ogg", "wma", "flac", "alac", "wma", "m3u"}
+	documentsExtensions  = []string{"doc", "docx", "log", "odt", "rtf", "tex", "txt", "csv", "pps", "ppt", "pptx", "xml", "xls", "xlsx", "db", "dbf", "sql"}
+	executableExtensions = []string{"apk", "app", "bat", "com", "exe", "jar", "wsf"}
+	// webFilesExtensions = []string{"asp", "aspx", "cer", "css", "htm", "html", "js", "jsp", "php", "xhtml"}
+	archivesExtensions = []string{"7z", "deb", "tar.gz", "zip", "zipx"}
+)
+
 func main() {
+
+	// create folders
+	if err := os.Mkdir("/home/mastodilu/Downloads/Eseguibili", os.FileMode(0766)); err != nil {
+		log.Println(err)
+	}
+	if err := os.Mkdir("/home/mastodilu/Downloads/Archivi", os.FileMode(0766)); err != nil {
+		log.Println(err)
+	}
+	if err := os.Mkdir("/home/mastodilu/Downloads/Altro", os.FileMode(0766)); err != nil {
+		log.Println(err)
+	}
+
 	// creates a new file watcher
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
