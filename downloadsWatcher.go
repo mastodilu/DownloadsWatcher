@@ -16,22 +16,36 @@ func main() {
 	}
 	defer watcher.Close()
 
+	done := make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			// watch for events
+			case event := <-watcher.Events:
+				if event.Op&fsnotify.Chmod == fsnotify.Chmod {
+					// do something
+				}
+
+				fmt.Printf("%v %v\n",
+					event.Op.String(), // operation name
+					event.Name,        // file name
+				)
+
+			// watch for errors
+			case err := <-watcher.Errors:
+				done <- struct{}{} // terminate the program
+				log.Fatalln(err)
+			}
+		}
+	}()
+
 	// watch for folder changes
 	if err := watcher.Add("/home/mastodilu/Downloads"); err != nil {
 		log.Fatalln(err)
 	}
 
-	for {
-		select {
-		// watch for events
-		case event := <-watcher.Events:
-			fmt.Printf("%v %v\n", event.Op.String(), event.Name)
-
-		// watch for errors
-		case err := <-watcher.Errors:
-			log.Println(err)
-		}
-	}
+	<-done
 
 	/*
 		scaricare dal web qualcosa genera questi eventi:
